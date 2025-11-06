@@ -4,9 +4,10 @@ Pirmeiro, é necessário ter o npm instalado na máquina, aprenda a realizar a i
 https://abre.ai/alura-aprenda-a-instalar-o-npm
 
 Segundo, é necessário usar o comando `npm run install` no diretório raiz do projeto — onde há a o arquivo `package.json`.
-
 terceiro, é necessário usar um dos comandos abaixo de acordo com o gerenciador de pacotes que o usuário instalou no computador.
-
+Obs 1: nvm install 20
+Obs 2: nvm use 20
+Obs 3: npm install --legacy-peer-deps
 ```bash
 `npm run dev`
 # ou
