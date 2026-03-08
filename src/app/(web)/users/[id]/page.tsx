@@ -41,7 +41,7 @@ const UserDetails = (props: { params: { id: string } }) => {
 
     if (!roomId) toast.error('Id not provided');
 
-    setIsSubmittingReview(true)
+    setIsSubmittingReview(true);
 
     try {
       const { data } = await axios.post('/api/users', {
@@ -49,6 +49,7 @@ const UserDetails = (props: { params: { id: string } }) => {
         ratingValue,
         roomId,
       });
+
       console.log(data);
       toast.success('Review Submitted');
     } catch (error) {
@@ -64,6 +65,7 @@ const UserDetails = (props: { params: { id: string } }) => {
   };
 
   const fetchUserBooking = async () => getUserBookings(userId);
+
   const fetchUserData = async () => {
     const { data } = await axios.get<User>('/api/users');
     return data;
@@ -73,7 +75,7 @@ const UserDetails = (props: { params: { id: string } }) => {
     data: userBookings,
     error,
     isLoading,
-  } = useSWR('/api/userbooking', fetchUserBooking);
+  } = useSWR('/api/room-bookings', fetchUserBooking);
 
   const {
     data: userData,
@@ -82,35 +84,46 @@ const UserDetails = (props: { params: { id: string } }) => {
   } = useSWR('/api/users', fetchUserData);
 
   if (error || errorGettingUserData) throw new Error('Cannot fetch data');
+
   if (typeof userBookings === 'undefined' && !isLoading)
     throw new Error('Cannot fetch data');
+
   if (typeof userData === 'undefined' && !loadingUserData)
     throw new Error('Cannot fetch data');
 
   if (loadingUserData) return <LoadingSpinner />;
-  if (!userData) throw new Error('Cannot fetch data');
+
   if (!userData) throw new Error('Cannot fetch data');
 
+  const avatar =
+    typeof userData.image === 'string'
+      ? userData.image
+      : '/images/avatar.png';
+
   return (
-    <div className='container mx-auto px-2 md:px-4 py10'>
+    <div className='container mx-auto px-2 md:px-4 py-10'>
       <div className='grid md:grid-cols-12 gap-10'>
+
         <div className='hidden md:block md:col-span-4 lg:col-span-3 shadow-lg h-fit sticky top-10 bg-[#eff0f2] text-black rounded-lg px-6 py-4'>
           <div className='md:w-[143px] w-28 h-28 md:h-[143px] mx-auto mb-5 rounded-full overflow-hidden'>
             <Image
-              src={userData.image}
-              alt={userData.name}
+              src={avatar}
+              alt={userData.name || 'User'}
               width={143}
               height={143}
               className='img scale-animation rounded-full'
             />
           </div>
+
           <div className='font-normal py-4 text-left'>
             <h6 className='text-xl font-bold pb-3'>About</h6>
             <p className='text-sm'>{userData.about ?? ''}</p>
           </div>
+
           <div className='font-normal text-left'>
             <h6 className='text-xl font-bold pb-3'>{userData.name}</h6>
           </div>
+
           <div className='flex items-center'>
             <p className='mr-2'>Sign Out</p>
             <FaSignOutAlt
@@ -122,17 +135,21 @@ const UserDetails = (props: { params: { id: string } }) => {
 
         <div className='md:col-span-8 lg:col-span-9'>
           <div className='flex items-center'>
-            <h5 className='text-2xl font-bold mr-3'>Hello, {userData.name}</h5>
+            <h5 className='text-2xl font-bold mr-3'>
+              Hello, {userData.name}
+            </h5>
           </div>
+
           <div className='md:hidden w-14 h-14 rounded-l-full overflow-hidden'>
             <Image
               className='img scale-animation rounded-full'
               width={56}
               height={56}
-              src={userData.image}
-              alt='User  Name'
+              src={avatar}
+              alt='User'
             />
           </div>
+
           <p className='block w-fit md:hidden text-sm py-2'>
             {userData.about ?? ''}
           </p>
@@ -140,6 +157,7 @@ const UserDetails = (props: { params: { id: string } }) => {
           <p className='text-xs py-2 font-medium'>
             Joined In {userData._createdAt.split('T')[0]}
           </p>
+
           <div className='md:hidden flex items-center my-2'>
             <p className='mr-2'>Sign out</p>
             <FaSignOutAlt
@@ -151,7 +169,9 @@ const UserDetails = (props: { params: { id: string } }) => {
           <nav className='sticky top-0 px-2 w-fit mx-auto md:w-full md:px-5 py-3 mb-8 text-gray-700 border border-gray-200 rounded-lg bg-gray-50 mt-7'>
             <ol
               className={`${
-                currentNav === 'bookings' ? 'text-blue-600' : 'text-gray-700'
+                currentNav === 'bookings'
+                  ? 'text-blue-600'
+                  : 'text-gray-700'
               } inline-flex mr-1 md:mr-5 items-center space-x-1 md:space-x-3`}
             >
               <li
@@ -164,9 +184,12 @@ const UserDetails = (props: { params: { id: string } }) => {
                 </a>
               </li>
             </ol>
+
             <ol
               className={`${
-                currentNav === 'amount' ? 'text-blue-600' : 'text-gray-700'
+                currentNav === 'amount'
+                  ? 'text-blue-600'
+                  : 'text-gray-700'
               } inline-flex mr-1 md:mr-5 items-center space-x-1 md:space-x-3`}
             >
               <li
@@ -189,15 +212,11 @@ const UserDetails = (props: { params: { id: string } }) => {
                 toggleRatingModal={toggleRatingModal}
               />
             )
-          ) : (
-            <></>
-          )}
+          ) : null}
 
           {currentNav === 'amount' ? (
             userBookings && <Chart userBookings={userBookings} />
-          ) : (
-            <></>
-          )}
+          ) : null}
         </div>
       </div>
 
@@ -211,6 +230,7 @@ const UserDetails = (props: { params: { id: string } }) => {
         reviewSubmitHandler={reviewSubmitHandler}
         toggleRatingModal={toggleRatingModal}
       />
+
       <BackDrop isOpen={isRatingVisible} />
     </div>
   );

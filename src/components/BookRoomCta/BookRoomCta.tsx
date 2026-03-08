@@ -18,6 +18,7 @@ type Props = {
   noOfChildren: number;
   specialNote: string;
   isBooked: boolean;
+  bookedDates: Date[];
   handleBookNowClick: () => void;
 };
 
@@ -36,6 +37,7 @@ const BookRoomCta: FC<Props> = props => {
     adults,
     noOfChildren,
     isBooked,
+    bookedDates,
     handleBookNowClick,
   } = props;
 
@@ -43,8 +45,10 @@ const BookRoomCta: FC<Props> = props => {
 
   const calcNoOfDays = () => {
     if (!checkinDate || !checkoutDate) return 0;
+
     const timeDiff = checkoutDate.getTime() - checkinDate.getTime();
     const noOfDays = Math.ceil(timeDiff / (24 * 60 * 60 * 1000));
+
     return noOfDays;
   };
 
@@ -56,15 +60,14 @@ const BookRoomCta: FC<Props> = props => {
         >
           R$ {price}
         </span>
+
         {discount ? (
           <span className='font-bold text-xl'>
             {' '}
             | desconto {discount}%. Já{' '}
             <span className='text-tertiary-dark'>R$ {discountPrice}</span>
           </span>
-        ) : (
-          ''
-        )}
+        ) : null}
       </h3>
 
       <div className='w-full border-b-2 border-b-secondary my-2' />
@@ -79,15 +82,18 @@ const BookRoomCta: FC<Props> = props => {
           >
             Data checkin
           </label>
+
           <DatePicker
             selected={checkinDate}
-            onChange={date => setCheckinDate(date)}
+            onChange={(date: Date | null) => setCheckinDate(date)}
             dateFormat='dd/MM/yyyy'
             minDate={new Date()}
+            excludeDates={bookedDates}
             id='check-in-date'
             className='bg-[#a0a0a0] w-full border text-black border-gray-300 rounded-lg p-2.5 focus:ring-primary focus:border-primary'
           />
         </div>
+
         <div className='w-1/2 pl-2'>
           <label
             htmlFor='check-out-date'
@@ -95,14 +101,16 @@ const BookRoomCta: FC<Props> = props => {
           >
             Data checkout
           </label>
+
           <DatePicker
             selected={checkoutDate}
-            onChange={date => setCheckoutDate(date)}
+            onChange={(date: Date | null) => setCheckoutDate(date)}
             dateFormat='dd/MM/yyyy'
             disabled={!checkinDate}
             minDate={calcMinCheckoutDate()}
+            excludeDates={bookedDates}
             id='check-out-date'
-            className='bg-[#a0a0a0]  w-full border text-black border-gray-300 rounded-lg p-2.5 focus:ring-primary focus:border-primary'
+            className='bg-[#a0a0a0] w-full border text-black border-gray-300 rounded-lg p-2.5 focus:ring-primary focus:border-primary'
           />
         </div>
       </div>
@@ -115,6 +123,7 @@ const BookRoomCta: FC<Props> = props => {
           >
             Adultos
           </label>
+
           <input
             type='number'
             id='adults'
@@ -122,9 +131,10 @@ const BookRoomCta: FC<Props> = props => {
             onChange={e => setAdults(+e.target.value)}
             min={1}
             max={5}
-            className='bg-[#a0a0a0]  w-full border border-gray-300 rounded-lg p-2.5'
+            className='bg-[#a0a0a0] w-full border border-gray-300 rounded-lg p-2.5'
           />
         </div>
+
         <div className='w-1/2 pl-2'>
           <label
             htmlFor='children'
@@ -132,6 +142,7 @@ const BookRoomCta: FC<Props> = props => {
           >
             Crianças
           </label>
+
           <input
             type='number'
             id='children'
@@ -139,23 +150,23 @@ const BookRoomCta: FC<Props> = props => {
             onChange={e => setNoOfChildren(+e.target.value)}
             min={0}
             max={3}
-            className='bg-[#a0a0a0]  w-full border border-gray-300 rounded-lg p-2.5'
+            className='bg-[#a0a0a0] w-full border border-gray-300 rounded-lg p-2.5'
           />
         </div>
       </div>
 
-      {calcNoOfDays() > 0 ? (
-        <p className='mt-3'>Valor total R$ {calcNoOfDays() * discountPrice}</p>
-      ) : (
-        <></>
+      {calcNoOfDays() > 0 && (
+        <p className='mt-3'>
+          Valor total R$ {calcNoOfDays() * discountPrice}
+        </p>
       )}
 
       <button
         disabled={isBooked}
         onClick={handleBookNowClick}
-        className='btn-primary w-full mt-6 disabled:bg-gray-500 disabled:cursor-not-allowed'
+        className='btn-primary w-full mt-6 disabled:bg-red-400 disabled:cursor-not-allowed'
       >
-        {isBooked ? 'Booked' : 'RESERVAR'}
+        {isBooked ? 'Datas indisponíveis' : 'RESERVAR'}
       </button>
     </div>
   );

@@ -18,7 +18,8 @@ type RequestData = {
   hotelRoomSlug: string;
 };
 
-export async function POST(req: Request, res: Response) {
+export async function POST(req: Request) {
+
   const {
     checkinDate,
     adults,
@@ -28,17 +29,12 @@ export async function POST(req: Request, res: Response) {
     numberOfDays,
   }: RequestData = await req.json();
 
-  if (
-    !checkinDate ||
-    !checkoutDate ||
-    !adults ||
-    !hotelRoomSlug ||
-    !numberOfDays
-  ) {
+  if (!checkinDate || !checkoutDate || !hotelRoomSlug || !numberOfDays) {
     return new NextResponse('Please all fields are required', { status: 400 });
   }
 
-  const origin = req.headers.get('origin');
+  const origin =
+    req.headers.get('origin') || process.env.NEXTAUTH_URL || 'http://localhost:3000';
 
   const session = await getServerSession(authOptions);
 
@@ -47,17 +43,20 @@ export async function POST(req: Request, res: Response) {
   }
 
   const userId = session.user.id;
+
   const formattedCheckoutDate = checkoutDate.split('T')[0];
   const formattedCheckinDate = checkinDate.split('T')[0];
 
   try {
+
     const room = await getRoom(hotelRoomSlug);
+
     const discountPrice = room.price - (room.price / 100) * room.discount;
     const totalPrice = discountPrice * numberOfDays;
 
-    // Create a stripe payment
     const stripeSession = await stripe.checkout.sessions.create({
       mode: 'payment',
+
       line_items: [
         {
           quantity: 1,
@@ -65,14 +64,18 @@ export async function POST(req: Request, res: Response) {
             currency: 'usd',
             product_data: {
               name: room.name,
-              images: room.images.map(image => image.url),
+              images: room.images.map((image: any) => image.url),
             },
-            unit_amount: parseInt((totalPrice * 100).toString()),
+            unit_amount: Math.round(totalPrice * 100),
           },
         },
       ],
+
       payment_method_types: ['card'],
+
       success_url: `${origin}/users/${userId}`,
+      cancel_url: `${origin}/rooms`,
+
       metadata: {
         adults,
         checkinDate: formattedCheckinDate,
@@ -82,16 +85,20 @@ export async function POST(req: Request, res: Response) {
         numberOfDays,
         user: userId,
         discount: room.discount,
-        totalPrice
-      }
+        totalPrice,
+      },
     });
 
     return NextResponse.json(stripeSession, {
       status: 200,
       statusText: 'Sessão de pagamento criada',
     });
+
   } catch (error: any) {
     console.log('Falha no pagamento', error);
-    return new NextResponse(error, { status: 500 });
+
+    return new NextResponse('Erro ao criar sessão de pagamento', {
+      status: 500,
+    });
   }
 }
