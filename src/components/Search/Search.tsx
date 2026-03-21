@@ -5,16 +5,12 @@ import { ChangeEvent, FC } from 'react';
 
 type Props = {
   roomTypeFilter: string;
-  searchQuery: string;
   setRoomTypeFilter: (value: string) => void;
-  setSearchQuery: (value: string) => void;
 };
 
 const Search: FC<Props> = ({
   roomTypeFilter,
-  searchQuery,
   setRoomTypeFilter,
-  setSearchQuery,
 }) => {
   const router = useRouter();
 
@@ -22,56 +18,41 @@ const Search: FC<Props> = ({
     setRoomTypeFilter(event.target.value);
   };
 
-  const handleSearchQueryChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(event.target.value);
-  };
-
   const handleFilterClick = () => {
-    router.push(`/rooms?roomType=${roomTypeFilter}&searchQuery=${searchQuery}`);
+    router.push(`/rooms?roomType=${roomTypeFilter}`);
   };
 
   return (
-    <section className='bg-tertiary-light px-4 py-6 rounded-lg'>
-      <div className='container mx-auto flex gap-4 flex-wrap justify-between items-center'>
-        <div className='w-full md:1/3 lg:w-auto mb-4 md:mb-0'>
+    <section className='bg-tertiary-light px-4 py-6 rounded-lg mt-8'>
+      <div className='container mx-auto flex gap-4 flex-wrap justify-between items-end'>
+
+        {/* FILTRO DE ACOMODAÇÃO */}
+        <div className='w-full md:w-1/3 lg:w-auto'>
           <label className='block text-sm font-medium mb-2 text-black'>
             Acomodações
           </label>
-          <div className='relative'>
-            <select
-              value={roomTypeFilter}
-              onChange={handleRoomTypeChange}
-              className='w-full px-4 py-2 capitalize rounded leading-tight dark:bg-black focus:outline-none'
-            >
-              <option value='All'>Tudo</option>
-              <option value='Basic'>Básic</option>
-              <option value='Luxury'>Luxo</option>
-              <option value='Suite'>Suíte</option>
-            </select>
-          </div>
+
+          <select
+            value={roomTypeFilter}
+            onChange={handleRoomTypeChange}
+            className='w-full px-4 py-2 capitalize rounded leading-tight dark:bg-black focus:outline-none'
+          >
+            <option value='all'>Tudo</option>
+            <option value='quarto_independente'>Quarto independente</option>
+            <option value='casa'>Casa com área social coletiva</option>
+            <option value='casa_privativa'>Casa com área social privativa</option>
+          </select>
         </div>
 
-        <div className='w-full md:1/3 lg:w-auto mb-4 md:mb-0'>
-          <label className='block text-sm font-medium mb-2 text-black'>
-            Pesquisa
-          </label>
-          <input
-            type='search'
-            id='search'
-            placeholder='Search...'
-            className='w-full px-4 py-3 rounded leading-tight dark:bg-black focus:outline-none placeholder:text-black dark:placeholder:text-white'
-            value={searchQuery}
-            onChange={handleSearchQueryChange}
-          />
-        </div>
-
+        {/* BOTÃO */}
         <button
           className='btn-primary'
           type='button'
           onClick={handleFilterClick}
         >
-          Pesquisa
+          Pesquisar
         </button>
+
       </div>
     </section>
   );

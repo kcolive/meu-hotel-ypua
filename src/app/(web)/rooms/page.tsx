@@ -1,79 +1,57 @@
 'use client';
 
-import { useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import useSWR from 'swr';
+import { useSearchParams } from 'next/navigation';
 
 import { getRooms } from '@/libs/apis';
 import { Room } from '@/models/room';
-import Search from '@/components/Search/Search';
 import RoomCard from '@/components/RoomCard/RoomCard';
 
-const Rooms = () => {
-  const [roomTypeFilter, setRoomTypeFilter] = useState('');
-  const [searchQuery, setSearchQuery] = useState('');
+export default function RoomsPage() {
+  const [rooms, setRooms] = useState<Room[]>([]);
   const searchParams = useSearchParams();
 
-  useEffect(() => {
-    const searchQuery = searchParams.get('searchQuery');
-    const roomType = searchParams.get('roomType');
+  const roomType = searchParams.get('roomType') || 'all';
 
-    if (roomType) setRoomTypeFilter(roomType);
-    if (searchQuery) setSearchQuery(searchQuery);
+  useEffect(() => {
+    const fetchRooms = async () => {
+      try {
+        const data = await getRooms();
+        setRooms(data || []);
+      } catch (error) {
+        console.error('Erro ao buscar quartos:', error);
+      }
+    };
+
+    fetchRooms();
   }, []);
 
-  async function fetchData() {
-    return getRooms();
-  }
-
-  const { data, error, isLoading } = useSWR('get/hotelRooms', fetchData);
-
-  if (error) throw new Error('Não foi possivel encontrar o dado');
-  if (typeof data === 'undefined' && !isLoading)
-    throw new Error('Não foi possivel encontrar o dado');
-
-  const filterRooms = (rooms: Room[]) => {
-    return rooms.filter(room => {
-      // Apply room type filter
-
-      if (
-        roomTypeFilter &&
-        roomTypeFilter.toLowerCase() !== 'all' &&
-        room.type.toLowerCase() !== roomTypeFilter.toLowerCase()
-      ) {
-        return false;
-      }
-
-      //   Apply search query filter
-      if (
-        searchQuery &&
-        !room.name.toLowerCase().includes(searchQuery.toLowerCase())
-      ) {
-        return false;
-      }
-
-      return true;
-    });
-  };
-
-  const filteredRooms = filterRooms(data || []);
+  // 🔥 FILTRO APLICADO AQUI
+  const filteredRooms =
+    roomType === 'all'
+      ? rooms
+      : rooms.filter((room) => room.type === roomType);
 
   return (
-    <div className='container mx-auto pt-10'>
-      <Search
-        roomTypeFilter={roomTypeFilter}
-        searchQuery={searchQuery}
-        setRoomTypeFilter={setRoomTypeFilter}
-        setSearchQuery={setSearchQuery}
-      />
+    <div className="max-w-7xl mx-auto px-4 py-8">
 
-      <div className='flex mt-20 justify-between flex-wrap'>
-        {filteredRooms.map(room => (
-          <RoomCard key={room._id} room={room} />
-        ))}
-      </div>
+      <h1 className="text-2xl font-semibold mb-6">
+        Acomodações
+      </h1>
+
+      {filteredRooms.length > 0 ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+
+          {filteredRooms.map((room) => (
+            <RoomCard key={room._id} room={room} />
+          ))}
+
+        </div>
+      ) : (
+        <p className="text-center py-10 text-gray-500">
+          Nenhuma acomodação encontrada.
+        </p>
+      )}
     </div>
   );
-};
-
-export default Rooms;
+}

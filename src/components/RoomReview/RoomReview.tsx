@@ -1,46 +1,50 @@
+'use client';
+
 import axios from 'axios';
-import { FC } from 'react';
-import useSWR from 'swr';
+import { FC, useEffect, useState } from 'react';
 
 import { Review } from '@/models/review';
 import Rating from '../Rating/Rating';
 
 const RoomReview: FC<{ roomId: string }> = ({ roomId }) => {
-  const fetchRoomReviews = async () => {
-    const { data } = await axios.get<Review[]>(`/api/room-reviews/${roomId}`);
-    return data;
-  };
+  const [roomReviews, setRoomReviews] = useState<Review[]>([]);
+  const [error, setError] = useState(false);
 
-  const {
-    data: roomReviews,
-    error,
-    isLoading,
-  } = useSWR('/api/room-reviews', fetchRoomReviews);
+  useEffect(() => {
+    const fetchReviews = async () => {
+      try {
+        const { data } = await axios.get<Review[]>(
+          `/api/room-reviews/${roomId}`
+        );
+        setRoomReviews(data);
+      } catch {
+        setError(true);
+      }
+    };
 
-  if (error) throw new Error('Não foi possivel encontrar o dado');
-  if (typeof roomReviews === 'undefined' && !isLoading)
-    throw new Error('Não foi possivel encontrar o dado');
+    fetchReviews();
+  }, [roomId]);
 
-  console.log(roomReviews);
+  if (error) return null;
 
   return (
     <>
-      {roomReviews &&
-        roomReviews.map(review => (
-          <div
-            className='bg-gray-100 dark:bg-gray-900 p-4 rounded-lg'
-            key={review._id}
-          >
-            <div className='font-semibold mb-2 flex'>
-              <p>{review.user.name}</p>
-              <div className='ml-4 flex items-center text-tertiary-light text-lg'>
-                <Rating rating={review.userRating} />
-              </div>
-            </div>
+      {roomReviews.map(review => (
+        <div
+          className='bg-gray-100 dark:bg-gray-900 p-4 rounded-lg'
+          key={review._id}
+        >
+          <div className='font-semibold mb-2 flex'>
+            <p>{review.user.name}</p>
 
-            <p>{review.text}</p>
+            <div className='ml-4 flex items-center text-tertiary-light text-lg'>
+              <Rating rating={review.userRating} />
+            </div>
           </div>
-        ))}
+
+          <p>{review.text}</p>
+        </div>
+      ))}
     </>
   );
 };

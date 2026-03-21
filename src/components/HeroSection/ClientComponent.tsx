@@ -2,38 +2,32 @@
 
 import { FC } from 'react';
 
-import CountUpNumber from '../CountUpNumber/CountUpNumber';
-
 type Props = {
   heading1: React.ReactNode;
   section2: React.ReactNode;
 };
 
-const ClientComponent: FC<Props> = props => {
-  const { heading1, section2 } = props;
-
+const ClientComponent: FC<Props> = ({ heading1, section2 }) => {
   return (
-    <section className='flex px-4 items-center gap-12 container mx-auto'>
-      <div className='py-10 h-full'>
+    <section className='flex px-6 items-start gap-20 container mx-auto'>
+
+      {/* TEXTO */}
+      <div className='flex flex-col justify-start h-full max-w-xl'>
         {heading1}
 
-        <div className='flex justify-between mt-12'>
-          <div className='flex gap-3 flex-col items-center justify-center'>
-            <p className='text-xs lg:text-xl text-center'>Básica</p>
-            <CountUpNumber duration={5000} endValue={6} />
-          </div>
-          <div className='flex gap-3 flex-col items-center justify-center'>
-            <p className='text-xs lg:text-xl text-center'>Luxo</p>
-            <CountUpNumber duration={5000} endValue={4} />
-          </div>
-          <div className='flex gap-3 flex-col items-center justify-center'>
-            <p className='text-xs lg:text-xl text-center'>Suíte</p>
-            <CountUpNumber duration={5000} endValue={2} />
-          </div>
+        {/* TIPOS DE ACOMODAÇÃO */}
+        <div className='flex gap-6 mt-10 flex-wrap text-sm text-gray-600'>
+          <p>Quarto independente</p>
+          <p>•</p>
+          <p>Casa completa</p>
+          <p>•</p>
+          <p>Casa com área social privativa</p>
         </div>
       </div>
 
+      {/* IMAGENS */}
       {section2}
+
     </section>
   );
 };

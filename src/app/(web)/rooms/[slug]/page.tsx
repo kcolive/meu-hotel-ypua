@@ -1,15 +1,9 @@
 'use client';
 
-import useSWR from 'swr';
-import { MdOutlineCleaningServices } from 'react-icons/md';
-import { LiaFireExtinguisherSolid } from 'react-icons/lia';
-import { AiOutlineMedicineBox } from 'react-icons/ai';
-import { GiSmokeBomb } from 'react-icons/gi';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 
 import { getRoom } from '@/libs/apis';
-import LoadingSpinner from '../../loading';
 import HotelPhotoGallery from '@/components/HotelPhotoGallery/HotelPhotoGallery';
 import BookRoomCta from '@/components/BookRoomCta/BookRoomCta';
 import toast from 'react-hot-toast';
@@ -22,6 +16,9 @@ const RoomDetails = (props: { params: { slug: string } }) => {
     params: { slug },
   } = props;
 
+  const [room, setRoom] = useState<Room | null>(null);
+  const [error, setError] = useState(false);
+
   const [checkinDate, setCheckinDate] = useState<Date | null>(null);
   const [checkoutDate, setCheckoutDate] = useState<Date | null>(null);
   const [adults, setAdults] = useState(1);
@@ -29,9 +26,19 @@ const RoomDetails = (props: { params: { slug: string } }) => {
   const [isBooked, setIsBooked] = useState(false);
   const [bookedDates, setBookedDates] = useState<Date[]>([]);
 
-  const fetchRoom = async () => getRoom(slug);
+  // ✅ FETCH SEM SWR (SEM LOADING)
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const data = await getRoom(slug);
+        setRoom(data);
+      } catch {
+        setError(true);
+      }
+    };
 
-  const { data: room, error } = useSWR<Room>('/api/room', fetchRoom);
+    fetchData();
+  }, [slug]);
 
   const calcMinCheckoutDate = () => {
     if (checkinDate) {
@@ -44,36 +51,31 @@ const RoomDetails = (props: { params: { slug: string } }) => {
 
   const calcNumDays = () => {
     if (!checkinDate || !checkoutDate) return 0;
-
     const timeDiff = checkoutDate.getTime() - checkinDate.getTime();
-    const noOfDays = Math.ceil(timeDiff / (24 * 60 * 60 * 1000));
-
-    return noOfDays;
+    return Math.ceil(timeDiff / (24 * 60 * 60 * 1000));
   };
 
   const handleBookNowClick = async () => {
     if (!room) return;
 
     if (!checkinDate || !checkoutDate)
-      return toast.error('Por favor, informe as datas de check-in e check-out');
+      return toast.error('Por favor, informe as datas');
 
     if (checkinDate > checkoutDate)
-      return toast.error('Por favor, informe uma data válida para o checkout');
+      return toast.error('Data de checkout inválida');
 
     const numberOfDays = calcNumDays();
 
-    const hotelRoomSlug = room.slug.current;
-
-    const stripe = await getStripe();
-
     try {
+      const stripe = await getStripe();
+
       const { data: stripeSession } = await axios.post('/api/stripe', {
         checkinDate,
         checkoutDate,
         adults,
         children: noOfChildren,
         numberOfDays,
-        hotelRoomSlug,
+        hotelRoomSlug: room.slug.current,
       });
 
       if (stripe) {
@@ -82,20 +84,17 @@ const RoomDetails = (props: { params: { slug: string } }) => {
         });
 
         if (result.error) {
-          toast.error('O pagamento falhou');
+          toast.error('Pagamento falhou');
         }
       }
-    } catch (error) {
-      console.log('Error: ', error);
-      toast.error('Ocorreu um erro');
+    } catch {
+      toast.error('Erro ao processar reserva');
     }
   };
 
   useEffect(() => {
     const checkAvailability = async () => {
-      if (!room?._id) return;
-
-      if (!checkinDate || !checkoutDate) {
+      if (!room?._id || !checkinDate || !checkoutDate) {
         setIsBooked(false);
         return;
       }
@@ -103,9 +102,7 @@ const RoomDetails = (props: { params: { slug: string } }) => {
       try {
         const res = await fetch('/api/check-availability', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             roomId: room._id,
             checkinDate,
@@ -114,10 +111,8 @@ const RoomDetails = (props: { params: { slug: string } }) => {
         });
 
         const data = await res.json();
-
         setIsBooked(!data.available);
-      } catch (error) {
-        console.error('Erro verificando disponibilidade:', error);
+      } catch {
         setIsBooked(false);
       }
     };
@@ -149,83 +144,82 @@ const RoomDetails = (props: { params: { slug: string } }) => {
         });
 
         setBookedDates(dates);
-      } catch (error) {
-        console.error('Erro carregando reservas:', error);
-      }
+      } catch {}
     };
 
     fetchBookedDates();
   }, [room]);
 
-  if (error) throw new Error('Não foi possivel encontrar o dado.');
-  if (!room) return <LoadingSpinner />;
+  if (error) return <div className="p-10">Erro ao carregar</div>;
 
   return (
     <div>
-      <HotelPhotoGallery photos={room.images || []} />
 
-      <div className='container mx-auto mt-20'>
-        <div className='md:grid md:grid-cols-12 gap-10 px-3'>
-          <div className='md:col-span-8 md:w-full'>
-            <div>
-              <h2 className='font-bold text-left text-lg md:text-2xl'>
-                {room.name} ({room.dimension})
-              </h2>
+      {/* GALERIA */}
+      {room && <HotelPhotoGallery photos={room.images || []} />}
 
-              <div className='flex my-11'>
+      {/* CONTEÚDO */}
+      {room && (
+        <div className="container mx-auto px-4 mt-20 mb-20">
+          <div className="grid md:grid-cols-12 gap-10">
+
+            <div className="md:col-span-8">
+
+              <h1 className="text-3xl font-bold mb-6">
+                {room.name}
+              </h1>
+
+              <div className="flex flex-wrap gap-4 mb-10">
                 {(room.offeredAmenities || []).map((amenity) => (
                   <div
                     key={amenity._key}
-                    className='md:w-44 w-fit text-center px-2 md:px-0 h-20 md:h-40 mr-3 bg-[#eff0f2] dark:bg-gray-800 rounded-lg grid place-content-center'
+                    className="w-32 h-28 bg-gray-100 rounded-lg flex flex-col items-center justify-center"
                   >
-                    <i className={`fa-solid ${amenity.icon} md:text-2xl`}></i>
-                    <p className='text-xs md:text-base pt-3'>
-                      {amenity.amenity}
-                    </p>
+                    <i className={`fa-solid ${amenity.icon}`} />
+                    <p className="text-xs mt-2">{amenity.amenity}</p>
                   </div>
                 ))}
               </div>
 
-              <div className='mb-11'>
-                <h2 className='font-bold text-3xl mb-2'>Descrição</h2>
-                <p>{room.description}</p>
+              <div className="mb-12">
+                <h2 className="text-2xl font-semibold mb-3">Descrição</h2>
+                <p className="text-gray-700 leading-relaxed">
+                  {room.description}
+                </p>
               </div>
 
-              <div className='shadow dark:shadow-white rounded-lg p-6'>
-                <div className='items-center mb-4'>
-                  <p className='md:text-lg font-semibold'>
-                    Avaliação dos clientes
-                  </p>
-                </div>
-
-                <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-                  <RoomReview roomId={room._id} />
-                </div>
+              <div className="bg-white shadow rounded-lg p-6">
+                <h3 className="font-semibold mb-4">Avaliações</h3>
+                <RoomReview roomId={room._id} />
               </div>
             </div>
-          </div>
 
-          <div className='md:col-span-4 rounded-xl shadow-lg dark:shadow dark:shadow-white sticky top-10 h-fit overflow-auto'>
-            <BookRoomCta
-              discount={room.discount}
-              price={room.price}
-              specialNote={room.specialNote}
-              checkinDate={checkinDate}
-              setCheckinDate={setCheckinDate}
-              checkoutDate={checkoutDate}
-              setCheckoutDate={setCheckoutDate}
-              calcMinCheckoutDate={calcMinCheckoutDate}
-              adults={adults}
-              noOfChildren={noOfChildren}
-              setAdults={setAdults}
-              setNoOfChildren={setNoOfChildren}
-              isBooked={isBooked}
-              bookedDates={bookedDates}
-              handleBookNowClick={handleBookNowClick}
-            />
+            <div className="md:col-span-4">
+              <div className="sticky top-20 bg-white shadow rounded-xl p-4">
+
+                <BookRoomCta
+                  discount={room.discount}
+                  price={room.price}
+                  specialNote={room.specialNote}
+                  checkinDate={checkinDate}
+                  setCheckinDate={setCheckinDate}
+                  checkoutDate={checkoutDate}
+                  setCheckoutDate={setCheckoutDate}
+                  calcMinCheckoutDate={calcMinCheckoutDate}
+                  adults={adults}
+                  noOfChildren={noOfChildren}
+                  setAdults={setAdults}
+                  setNoOfChildren={setNoOfChildren}
+                  isBooked={isBooked}
+                  bookedDates={bookedDates}
+                  handleBookNowClick={handleBookNowClick}
+                />
+              </div>
+            </div>
+
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

@@ -9,81 +9,97 @@ import { useSession } from 'next-auth/react';
 import Image from 'next/image';
 
 const Header = () => {
-    const { darkTheme, setDarkTheme } = useContext(ThemeContext);
-    const { data: session } = useSession();
-    console.log(session);
+  const { darkTheme, setDarkTheme } = useContext(ThemeContext);
+  const { data: session } = useSession();
 
-    const handleScrollToFooter = (event: { preventDefault: () => void; }) => {
-        event.preventDefault();
-        const footerElement = document.querySelector('footer');
-        footerElement?.scrollIntoView({ behavior: 'smooth' });
-    };
+  const handleScrollToFooter = (event: { preventDefault: () => void }) => {
+    event.preventDefault();
+    const footerElement = document.querySelector('footer');
+    footerElement?.scrollIntoView({ behavior: 'smooth' });
+  };
 
-    return (
-        <header className="py-10 px-4 container mx-auto text-xl flex flex-wrap md:flex-nowrap items-center justify-between">
-            <div className="flex items-center w-full md:2/3">
-                <a className="font-black text-tertiary-light" href="https://gerenciamento-hoteleiro.vercel.app/">
-                    <img src="/images/logo-pousada-quinta-do-ypua.png" alt="" className="h-12 md:h-16" />
-                </a>
-            </div>
-            <ul className="flex items-center justify-between w-full md:w1/3 mt-4">
-                <li className='hover:-translate-y-2 duration-500 transition-all'>
-                    <Link href="/">Início</Link>
-                </li>
-                <li className='hover:-translate-y-2 duration-500 transition-all'>
-                    <Link href="/rooms">Acomodações</Link>
-                </li>
-                <li className='hover:-translate-y-2 duration-500 transition-all'>
-                    {/* Adicionando evento para mover ao rodapé */}
-                    <a href="#footer" onClick={handleScrollToFooter}>Contato</a>
-                </li>
-                <ul className='flex items-center ml-5'>
-                    <li className='flex items-center'>
-                        {session?.user ? (
-                            <Link href={`/users/${session.user.id}`}>
-                                {session.user.image ? (
-                                    <div className='w-10 h-10 rounded-full overflow-hidden'>
-                                        <Image
-                                            src={session.user.image}
-                                            alt={session.user.name!}
-                                            width={40}
-                                            height={40}
-                                            className='scale-animation img'
-                                        />
-                                    </div>
-                                ) : (
-                                    <FaUserCircle className='cursor-pointer' />
-                                )}
-                            </Link>
-                        ) : (
-                            <Link href='/auth'>
-                                <FaUserCircle className='cursor-pointer' />
-                            </Link>
-                        )}
-                    </li>
-                    <li className='ml-2'>
-                        {darkTheme ? (
-                            <MdOutlineLightMode
-                                className='cursor-pointer'
-                                onClick={() => {
-                                    setDarkTheme(false);
-                                    localStorage.removeItem('hotel-theme');
-                                }}
-                            />
-                        ) : (
-                            <MdDarkMode
-                                className='cursor-pointer'
-                                onClick={() => {
-                                    setDarkTheme(true);
-                                    localStorage.setItem('hotel-theme', 'true');
-                                }}
-                            />
-                        )}
-                    </li>
-                </ul>
-            </ul>
-        </header>
-    );
+  return (
+    <header className="flex items-center justify-between px-10 py-4 w-full">
+
+      {/* LOGO */}
+      <div className="flex items-center">
+        <Link href="/">
+          <Image
+            src="/images/logo.png"
+            alt="Logo da pousada"
+            width={200}
+            height={200}
+            className="h-24 w-auto object-contain"
+            priority
+          />
+        </Link>
+      </div>
+
+      {/* MENU */}
+      <ul className="flex items-center gap-8 text-lg">
+
+        <li className="hover:-translate-y-1 duration-300 transition-all">
+          <Link href="/">Início</Link>
+        </li>
+
+        <li className="hover:-translate-y-1 duration-300 transition-all">
+          <Link href="/rooms">Acomodações</Link>
+        </li>
+
+        <li className="hover:-translate-y-1 duration-300 transition-all">
+          <a href="#footer" onClick={handleScrollToFooter}>
+            Contato
+          </a>
+        </li>
+
+        {/* USER + DARKMODE */}
+        <li className="flex items-center gap-3">
+
+          {session?.user ? (
+            <Link href={`/users/${session.user.id}`}>
+              {session.user.image ? (
+                <div className="w-10 h-10 rounded-full overflow-hidden">
+                  <Image
+                    src={session.user.image}
+                    alt={session.user.name!}
+                    width={40}
+                    height={40}
+                    className="object-cover"
+                  />
+                </div>
+              ) : (
+                <FaUserCircle className="cursor-pointer text-xl" />
+              )}
+            </Link>
+          ) : (
+            <Link href="/auth">
+              <FaUserCircle className="cursor-pointer text-xl" />
+            </Link>
+          )}
+
+          {darkTheme ? (
+            <MdOutlineLightMode
+              className="cursor-pointer text-xl"
+              onClick={() => {
+                setDarkTheme(false);
+                localStorage.removeItem('hotel-theme');
+              }}
+            />
+          ) : (
+            <MdDarkMode
+              className="cursor-pointer text-xl"
+              onClick={() => {
+                setDarkTheme(true);
+                localStorage.setItem('hotel-theme', 'true');
+              }}
+            />
+          )}
+
+        </li>
+
+      </ul>
+    </header>
+  );
 };
 
 export default Header;

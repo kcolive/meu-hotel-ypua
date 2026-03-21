@@ -1,155 +1,121 @@
 'use client';
 
-import { FC, useState } from 'react';
-import Image from 'next/image';
+import { useState } from "react";
+import Image from "next/image";
 
-import { Image as ImageType } from '@/models/room';
-import { FaArrowLeft, FaArrowRight } from 'react-icons/fa';
-import { MdCancel } from 'react-icons/md';
-
-const HotelPhotoGallery: FC<{ photos: ImageType[] }> = ({ photos }) => {
-  const [currenPhotoIndex, setCurrentPhotoIndex] = useState(0);
-  const [showModal, setShowModal] = useState(false);
-
-  const openModal = (index: number) => {
-    setCurrentPhotoIndex(index);
-    setShowModal(true);
-  };
-
-  const closeModal = () => setShowModal(false);
-
-  const handlePrevious = () => {
-    setCurrentPhotoIndex(prevIndex =>
-      prevIndex === 0 ? photos.length - 1 : prevIndex - 1
-    );
-  };
-
-  const handleNext = () => {
-    setCurrentPhotoIndex(prevIndex =>
-      prevIndex === photos.length - 1 ? 0 : prevIndex + 1
-    );
-  };
-
-  const maximumVisiblePhotos = 6;
-  const totalPhotos = photos.length;
-  const displayPhotos = photos.slice(1, maximumVisiblePhotos - 1);
-  const remainingPhotosCount = totalPhotos - maximumVisiblePhotos;
-
-  return (
-    <div className='container mx-auto'>
-      <div className='grid md:grid-cols-2 relative gap-5 px-3'>
-        <div className='h-[540px] relative rounded-2xl overflow-hidden'>
-          <div className='hidden md:flex justify-center items-center w-full h-full'>
-            <Image
-              src={photos[0].url}
-              alt={`Room Photo ${currenPhotoIndex + 1}`}
-              className='img scale-animation cursor-pointer'
-              width={1000}
-              height={1000}
-              onClick={openModal.bind(this, 0)}
-            />
-          </div>
-          <div className='hidden md:flex justify-center items-center w-full h-full'>
-            <Image
-              src={photos[0].url}
-              alt={`Room Photo ${currenPhotoIndex + 1}`}
-              className='img scale-animation cursor-pointer'
-              width={1000}
-              height={1000}
-              onClick={openModal.bind(this, 0)}
-            />
-          </div>
-          <div className='md:hidden flex justify-center items-center w-full h-full'>
-            <Image
-              src={photos[currenPhotoIndex].url}
-              alt={`Room Photo ${currenPhotoIndex + 1}`}
-              className='img'
-              width={1000}
-              height={1000}
-              onClick={openModal.bind(this, 0)}
-            />
-          </div>
-        </div>
-        <div className='md:hidden flex justify-between items-center'>
-          <div className='flex space-x-2'>
-            <FaArrowLeft className='cursor-pointer' onClick={handlePrevious} />
-            <FaArrowRight className='cursor-pointer' onClick={handleNext} />
-          </div>
-          <span>
-            {currenPhotoIndex + 1} / {photos.length}
-          </span>
-        </div>
-        <div className='hidden md:grid grid-cols-2 h-full gap-5'>
-          {displayPhotos.map((photo, index) => (
-            <div
-              key={index}
-              className='cursor-pointer h-64 rounded-2xl overflow-hidden'
-            >
-              <Image
-              width={1000}
-              height={1000}
-                src={photo.url}
-                alt={`Room Photo ${index + 2}`}
-                className='img scale-animation'
-              />
-            </div>
-          ))}
-          {remainingPhotosCount > 0 && (
-            <div
-              className='cursor-pointer relative h-64 rounded-2xl overflow-hidden'
-              onClick={openModal.bind(this, maximumVisiblePhotos)}
-            >
-              <Image
-              width={1000}
-              height={1000}
-                src={photos[maximumVisiblePhotos - 1].url}
-                alt={`Room Photo ${maximumVisiblePhotos}`}
-                className='img'
-              />
-              <div className='absolute cursor-pointer text-white inset-0 flex justify-center bg-[rgba(0,0,0,0.5)] items-center text-2xl'>
-                + {remainingPhotosCount}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {showModal && (
-          <div className='fixed top-0 left-0 w-full h-full flex justify-center items-center bg-black bg-opacity-90 z-[55]'>
-            <div className='h-[75vh] w-[320px] md:w-[700px] relative'>
-              <Image
-                src={photos[currenPhotoIndex].url}
-                alt={`Room Photo ${currenPhotoIndex + 1}`}
-                width={1000}
-                height={1000}
-                className='img'
-              />
-              <div className='flex justify-between items-center py-3'>
-                <div className='flex space-x-2 items-center text-white'>
-                  <FaArrowLeft
-                    className='cursor-pointer'
-                    onClick={handlePrevious}
-                  />
-                  <FaArrowRight
-                    className='cursor-pointer'
-                    onClick={handleNext}
-                  />
-                </div>
-                <span className='text-white text-sm'>
-                  {currenPhotoIndex + 1} / {photos.length}
-                </span>
-              </div>
-              <button
-                className='absolute top-2 right-2 text-white text-lg'
-                onClick={closeModal}
-              >
-                <MdCancel className='font-medium text-2xl text-tertiary-dark' />
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  );
+type Photo = {
+  url?: string;
 };
 
-export default HotelPhotoGallery;
+export default function HotelPhotoGallery({ photos }: { photos: Photo[] }) {
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+
+  if (!photos || photos.length === 0) return null;
+
+  const getUrl = (photo: Photo) => photo?.url || "/placeholder.jpg";
+
+  const goPrev = () => {
+    setSelectedIndex((prev) =>
+      prev === 0 ? photos.length - 1 : (prev as number) - 1
+    );
+  };
+
+  const goNext = () => {
+    setSelectedIndex((prev) =>
+      prev === photos.length - 1 ? 0 : (prev as number) + 1
+    );
+  };
+
+  return (
+    <div className="container mx-auto">
+
+      {/* FOTO PRINCIPAL */}
+      <div
+        className="w-full h-[520px] overflow-hidden rounded-xl mb-4 cursor-pointer"
+        onClick={() => setSelectedIndex(0)}
+      >
+        <Image
+          src={getUrl(photos[0])}
+          alt="Foto principal"
+          width={1200}
+          height={800}
+          className="w-full h-full object-cover"
+        />
+      </div>
+
+      {/* MINIATURAS */}
+      <div className="flex gap-3 flex-wrap">
+        {photos.map((photo, index) => (
+          <div
+            key={index}
+            className="w-24 h-24 overflow-hidden rounded-lg cursor-pointer"
+            onClick={() => setSelectedIndex(index)}
+          >
+            <Image
+              src={getUrl(photo)}
+              alt={`Foto ${index}`}
+              width={200}
+              height={200}
+              className="w-full h-full object-cover"
+            />
+          </div>
+        ))}
+      </div>
+
+      {/* MODAL COM NAVEGAÇÃO */}
+      {selectedIndex !== null && (
+        <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50">
+
+          <button
+            onClick={() => setSelectedIndex(null)}
+            className="absolute top-5 right-5 text-white text-3xl z-50"
+          >
+            ✕
+          </button>
+
+          {/* SETA ESQUERDA */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              goPrev();
+            }}
+            className="absolute left-5 text-white text-4xl z-50"
+          >
+            ‹
+          </button>
+
+          {/* IMAGEM */}
+          <div
+            className="max-w-5xl w-full px-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Image
+              src={getUrl(photos[selectedIndex])}
+              alt="Foto ampliada"
+              width={1600}
+              height={1000}
+              className="w-full h-auto rounded-xl"
+            />
+          </div>
+
+          {/* SETA DIREITA */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              goNext();
+            }}
+            className="absolute right-5 text-white text-4xl z-50"
+          >
+            ›
+          </button>
+
+          {/* FECHAR AO CLICAR FORA */}
+          <div
+            className="absolute inset-0"
+            onClick={() => setSelectedIndex(null)}
+          />
+        </div>
+      )}
+    </div>
+  );
+}
