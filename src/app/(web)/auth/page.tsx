@@ -33,14 +33,25 @@ const Auth = () => {
   }, [router, session]);
 
   const loginHandler = async () => {
-    try {
-      await signIn();
-      router.push('/');
-    } catch (error) {
-      console.log(error);
-      toast.error("Something wen't wrong");
+  try {
+    const res = await signIn("credentials", {
+      email: formData.email,
+      password: formData.password,
+      redirect: false,
+    });
+
+    if (res?.error) {
+      toast.error("Email ou senha inválidos");
+      return;
     }
-  };
+
+    toast.success("Login realizado com sucesso");
+    router.push('/');
+  } catch (error) {
+    console.log(error);
+    toast.error("Something went wrong");
+  }
+};
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -73,7 +84,7 @@ const Auth = () => {
             />{' '}
             |
             <FcGoogle
-              onClick={loginHandler}
+              onClick={() => signIn("google")}
               className='ml-3 text-4xl cursor-pointer'
             />
           </span>

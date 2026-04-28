@@ -7,10 +7,13 @@ import { MdDarkMode, MdOutlineLightMode } from 'react-icons/md';
 import ThemeContext from '@/context/themeContext';
 import { useSession } from 'next-auth/react';
 import Image from 'next/image';
+import { signOut } from "next-auth/react";
+import { useRouter } from 'next/navigation';
 
 const Header = () => {
   const { darkTheme, setDarkTheme } = useContext(ThemeContext);
   const { data: session } = useSession();
+  const router = useRouter();
 
   const handleScrollToFooter = (event: { preventDefault: () => void }) => {
     event.preventDefault();
@@ -56,25 +59,45 @@ const Header = () => {
         <li className="flex items-center gap-3">
 
           {session?.user ? (
-            <Link href={`/users/${session.user.id}`}>
-              {session.user.image ? (
-                <div className="w-10 h-10 rounded-full overflow-hidden">
-                  <Image
-                    src={session.user.image}
-                    alt={session.user.name!}
-                    width={40}
-                    height={40}
-                    className="object-cover"
-                  />
-                </div>
-              ) : (
-                <FaUserCircle className="cursor-pointer text-xl" />
-              )}
-            </Link>
+            <div className="flex items-center gap-2">
+
+              <Link href={`/users/${session.user.id}`}>
+                {session.user.image ? (
+                  <div className="w-10 h-10 rounded-full overflow-hidden">
+                    <Image
+                      src={session.user.image}
+                      alt={session.user.name!}
+                      width={40}
+                      height={40}
+                      className="object-cover"
+                    />
+                  </div>
+                ) : (
+                  <FaUserCircle className="cursor-pointer text-xl" />
+                )}
+              </Link>
+
+              {/* botão sair */}
+              <button
+                onClick={() => signOut()}
+                className="text-sm underline"
+              >
+                Sair
+              </button>
+
+            </div>
           ) : (
-            <Link href="/auth">
-              <FaUserCircle className="cursor-pointer text-xl" />
-            </Link>
+            <div className="flex items-center gap-2">
+              
+              {/* 👉 CORREÇÃO AQUI */}
+              <button onClick={() => router.push("/auth/signin")}>
+                <FaUserCircle className="cursor-pointer text-xl" />
+              </button>
+
+              <span className="text-xs text-gray-500">
+                Entrar
+              </span>
+            </div>
           )}
 
           {darkTheme ? (
