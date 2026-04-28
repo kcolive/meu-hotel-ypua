@@ -23,6 +23,7 @@ export const getRoomsQuery = groq`*[_type == "hotelRoom"] {
 
     isFeatured,
     name,
+    numberOfBeds,
     price,
     slug,
     type

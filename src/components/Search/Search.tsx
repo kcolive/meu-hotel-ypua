@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { ChangeEvent, FC } from 'react';
+import { ChangeEvent, FC, useState } from 'react';
 
 type Props = {
   roomTypeFilter: string;
@@ -14,20 +14,28 @@ const Search: FC<Props> = ({
 }) => {
   const router = useRouter();
 
-  const handleRoomTypeChange = (event: ChangeEvent<HTMLSelectElement>) => {
+  const [capacity, setCapacity] = useState('all');
+  const [minPrice, setMinPrice] = useState('');
+  const [maxPrice, setMaxPrice] = useState('');
+
+  const handleRoomTypeChange = (
+    event: ChangeEvent<HTMLSelectElement>
+  ) => {
     setRoomTypeFilter(event.target.value);
   };
 
   const handleFilterClick = () => {
-    router.push(`/rooms?roomType=${roomTypeFilter}`);
+    router.push(
+      `/rooms?roomType=${roomTypeFilter}&capacity=${capacity}&minPrice=${minPrice}&maxPrice=${maxPrice}`
+    );
   };
 
   return (
     <section className='bg-tertiary-light px-4 py-6 rounded-lg mt-8'>
-      <div className='container mx-auto flex gap-4 flex-wrap justify-between items-end'>
+      <div className='container mx-auto grid grid-cols-1 md:grid-cols-4 gap-4 items-end'>
 
-        {/* FILTRO DE ACOMODAÇÃO */}
-        <div className='w-full md:w-1/3 lg:w-auto'>
+        {/* TIPO DE ACOMODAÇÃO */}
+        <div>
           <label className='block text-sm font-medium mb-2 text-black'>
             Acomodações
           </label>
@@ -38,20 +46,77 @@ const Search: FC<Props> = ({
             className='w-full px-4 py-2 capitalize rounded leading-tight dark:bg-black focus:outline-none'
           >
             <option value='all'>Tudo</option>
-            <option value='quarto_independente'>Quarto independente</option>
-            <option value='casa'>Casa com área social coletiva</option>
-            <option value='casa_privativa'>Casa com área social privativa</option>
+            <option value='quarto_independente'>
+              Quarto independente
+            </option>
+            <option value='casa'>
+              Casa com área social coletiva
+            </option>
+            <option value='casa_privativa'>
+              Casa com área social privativa
+            </option>
           </select>
         </div>
 
+        {/* CAPACIDADE */}
+        <div>
+          <label className='block text-sm font-medium mb-2 text-black'>
+            Capacidade
+          </label>
+
+          <select
+            value={capacity}
+            onChange={(e) => setCapacity(e.target.value)}
+            className='w-full px-4 py-2 rounded leading-tight dark:bg-black focus:outline-none'
+          >
+            <option value='all'>Todas</option>
+            <option value='1'>1+ cama</option>
+            <option value='2'>2+ camas</option>
+            <option value='3'>3+ camas</option>
+            <option value='4'>4+ camas</option>
+          </select>
+        </div>
+
+        {/* PREÇO MÍNIMO */}
+        <div>
+          <label className='block text-sm font-medium mb-2 text-black'>
+            Preço mínimo
+          </label>
+
+          <input
+            type='number'
+            placeholder='Ex: 200'
+            value={minPrice}
+            onChange={(e) => setMinPrice(e.target.value)}
+            className='w-full px-4 py-2 rounded leading-tight dark:bg-black focus:outline-none'
+          />
+        </div>
+
+        {/* PREÇO MÁXIMO */}
+        <div>
+          <label className='block text-sm font-medium mb-2 text-black'>
+            Preço máximo
+          </label>
+
+          <input
+            type='number'
+            placeholder='Ex: 800'
+            value={maxPrice}
+            onChange={(e) => setMaxPrice(e.target.value)}
+            className='w-full px-4 py-2 rounded leading-tight dark:bg-black focus:outline-none'
+          />
+        </div>
+
         {/* BOTÃO */}
-        <button
-          className='btn-primary'
-          type='button'
-          onClick={handleFilterClick}
-        >
-          Pesquisar
-        </button>
+        <div>
+          <button
+            className='btn-primary w-full'
+            type='button'
+            onClick={handleFilterClick}
+          >
+            Pesquisar
+          </button>
+        </div>
 
       </div>
     </section>

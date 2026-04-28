@@ -9,9 +9,13 @@ import RoomCard from '@/components/RoomCard/RoomCard';
 
 export default function RoomsPage() {
   const [rooms, setRooms] = useState<Room[]>([]);
+
   const searchParams = useSearchParams();
 
   const roomType = searchParams.get('roomType') || 'all';
+  const capacity = searchParams.get('capacity') || 'all';
+  const minPrice = searchParams.get('minPrice') || '';
+  const maxPrice = searchParams.get('maxPrice') || '';
 
   useEffect(() => {
     const fetchRooms = async () => {
@@ -26,11 +30,22 @@ export default function RoomsPage() {
     fetchRooms();
   }, []);
 
-  // 🔥 FILTRO APLICADO AQUI
-  const filteredRooms =
-    roomType === 'all'
-      ? rooms
-      : rooms.filter((room) => room.type === roomType);
+  // FILTRO COMPLETO:
+  // tipo + capacidade + faixa de preço
+  const filteredRooms = rooms.filter((room) => {
+    const matchesType =
+      roomType === 'all' || room.type === roomType;
+
+    const matchesCapacity =
+      capacity === 'all' ||
+      (room.numberOfBeds ?? 0) >= Number(capacity);
+
+    const matchesPrice =
+      (minPrice ? room.price >= Number(minPrice) : true) &&
+      (maxPrice ? room.price <= Number(maxPrice) : true);
+
+    return matchesType && matchesCapacity && matchesPrice;
+  });
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
