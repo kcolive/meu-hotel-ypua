@@ -15,6 +15,8 @@ export async function POST(req: Request) {
 
     const bookings = await client.fetch(checkRoomAvailabilityQuery, {
       roomId,
+      checkinDate,
+      checkoutDate,
     });
 
     const checkin = new Date(checkinDate);
